@@ -1,0 +1,40 @@
+body {
+  width: 200px;
+  height: 200px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  font-family: Arial, sans-serif;
+}
+button, input {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+button#changeSettings {
+  font-size: 14px;
+}
+div {
+  width: 100%;
+}
+hr.divider {
+  width: 100%;
+  border: none;
+  border-top: 1px solid #ccc;
+  margin: 20px 0;
+}
+.settings label {
+  width: 100%;
+  text-align: left;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+.settings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

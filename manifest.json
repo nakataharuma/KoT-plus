@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "KoT_plus",
+  "version": "1.0",
+  "description": "KOTのページに情報を追加する拡張機能です。",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "tabs",
+    "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://s2.kingoftime.jp/*",
+        "https://s2.ta.kingoftime.jp/*",
+        "https://s3.kingoftime.jp/*",
+        "https://s3.ta.kingoftime.jp/*"
+        ],
+      "js": ["content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
