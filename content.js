@@ -205,9 +205,13 @@ async function getWorkTime(){
   // 設定値を取得
   let workTimeTitle = '労働合計';
   try{
-    workTimeTitle = await chrome.maamastorage.sync.get(['WorkTimeTitle']);
+    value = await chrome.storage.sync.get(['WorkTimeTitle']);
+    workTimeTitle = value.WorkTimeTitle;
+    if(workTimeTitle === ''){
+      workTimeTitle = '労働合計';
+    }
   } catch (error) {
-    console.log('設定値が取得できませんでした。');
+    console.log('労働時間のタイトルを取得できませんでした。');
   }
 
   // タイトルが一致するclass名を取得
@@ -218,6 +222,10 @@ async function getWorkTime(){
     const lebelWithoutBr = lebel.replace(/\s*<br\s*\/?>\s*/gi, '').trim();
     if(lebelWithoutBr === workTimeTitle) return true;
   });
+  if(!workTimeHeaderElement){
+    console.log(`列が見つかりませんでした。タイトル:${workTimeTitle}`);
+    return null;
+  }
   const workTimeClass = workTimeHeaderElement.className.split(' ')[0];
   if(!workTimeClass){
     console.log('労働時間の列が見つかりませんでした。');

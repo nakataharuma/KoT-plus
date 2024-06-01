@@ -9,8 +9,12 @@
     <button id="openPageButton">KoTを開く</button>
     <hr class="divider">
     <div class="settings">
-        <label for="setWorkingTimePerDay">1日の所定勤務時間</label>
-        <input type="text" id="setWorkingTimePerDay" placeholder="例：8.0, 7.5">
+        <label for="setWorkingTimePerDay">1日の所定勤務時間<br />（デフォルト：8.00）</label>
+        <input type="text" id="setWorkingTimePerDay" placeholder="例：9.00, 7.30">
+    </div>
+    <div class="settings">
+        <label for="setWorkingTimePerDay">1日の実際の労働時間の列ラベル<br />（デフォルト：労働時間）</label>
+        <input type="text" id="setWorkingTimeTitle" placeholder="例：所定時間, 実働時間">
     </div>
     <div>
         <button id="changeSettings">設定変更</button>
