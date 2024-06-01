@@ -110,7 +110,7 @@ async function main() {
     // 残業貯金の計算
     try {
       const regularWorkTimePerDay = await getRegularWorkTimePerDay(); // 日の基本労働時間
-      const amountOfOvertime = getWorkTime(regularWorkTimePerDay); // 残業時間
+      const amountOfOvertime = await getOverWorkTime(regularWorkTimePerDay); // 残業時間
 
       // 新しいボディセルに残業貯金を表示
       newBodyCell.textContent = amountOfOvertime.toString();
@@ -127,39 +127,22 @@ main().catch(error => console.error('Error in main function:', error));
 // ======================================== 関数 ========================================
 
 // 1日の基本労働時間を取得
-async function getRegularWorkTimePerDay(){
-  return new Promise((resolve, reject) => {
-    chrome.storage.sync.get(['regularWorkTime'], function(value) {
-      if (chrome.runtime.lastError) {
-        return reject(chrome.runtime.lastError);
-      }
-      resolve(Time.fromString(value.regularWorkTime));
-    });
-  });
-  // // 情報を取得
-  // const regularWorkTime = getRegularWorkTime();
-  // if(!regularWorkTime) return null;
-  // const workCountDays = getWorkCount();
-  // const paidHolidayCountDays = getPaidHolidayCount();
-  // // 労働日数を計算
-  // const workCount = workCountDays.plus(paidHolidayCountDays);
-  // // 1日の基本労働時間を計算
-  // return regularWorkTime.divide(workCount.getDays());
+async function getRegularWorkTimePerDay() {
+  try {
+    const value = await chrome.storage.sync.get(['regularWorkTime']);
+    return Time.fromString(value.regularWorkTime);
+  } catch (error) {
+    return Time.fromString('8.00');
+  }
 }
 
-// 実際の労働時間を取得
-function getWorkTime(regularWorkTimePerDay = new Time(0)){
+// 残業時間を取得
+async function getOverWorkTime(regularWorkTimePerDay = new Time(0)){
   let amountOfOvertime = new Time(0); // 残業時間
-  const workTimeElements = document.querySelectorAll('.htBlock-adjastableTableF tbody td.custom5 > p');
-  if(workTimeElements.length > 0){
-    workTimeElements.forEach((workTimeElement) => {
-      const workTimeText = workTimeElement.textContent;
-      try{
-        const workTime = Time.fromString(workTimeText);
-        amountOfOvertime = amountOfOvertime.plus(workTime.minus(regularWorkTimePerDay));
-      } catch (e) {
-        return;
-      }
+  const workTimes = await getWorkTime();
+  if(workTimes.length > 0){
+    workTimes.forEach((workTime) => {
+      amountOfOvertime = amountOfOvertime.plus(workTime.minus(regularWorkTimePerDay));
     });
   }
   return amountOfOvertime;
@@ -215,4 +198,45 @@ function getPaidHolidayCount(){
     console.log('有給休暇日数が見つかりませんでした。');
     return new Days('0.0');
   }
+}
+
+// 働いた日の労働時間を取得
+async function getWorkTime(){
+  // 設定値を取得
+  let workTimeTitle = '労働合計';
+  try{
+    workTimeTitle = await chrome.maamastorage.sync.get(['WorkTimeTitle']);
+  } catch (error) {
+    console.log('設定値が取得できませんでした。');
+  }
+
+  // タイトルが一致するclass名を取得
+  const possibleHeaderElements = Array.from(document.querySelectorAll('.htBlock-adjastableTableF thead th'));
+  const workTimeHeaderElement = possibleHeaderElements.find((possibleHeader) => {
+    const lebel = possibleHeader.querySelector('p').textContent;
+    // <br />タグを削除する
+    const lebelWithoutBr = lebel.replace(/\s*<br\s*\/?>\s*/gi, '').trim();
+    if(lebelWithoutBr === workTimeTitle) return true;
+  });
+  const workTimeClass = workTimeHeaderElement.className.split(' ')[0];
+  if(!workTimeClass){
+    console.log('労働時間の列が見つかりませんでした。');
+    return null;
+  }
+
+  // 労働時間を取得
+  const arrayOfWorkTime = []; // 労働時間の配列
+  const workTimeElements = document.querySelectorAll(`.htBlock-adjastableTableF tbody td.${workTimeClass} > p`);
+  if(workTimeElements.length > 0){
+    workTimeElements.forEach((workTimeElement) => {
+      const workTimeText = workTimeElement.textContent;
+      try{
+        arrayOfWorkTime.push(Time.fromString(workTimeText));
+      } catch (e) {
+        return;
+      }
+    });
+  }
+
+  return arrayOfWorkTime;
 }
