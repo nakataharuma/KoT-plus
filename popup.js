@@ -21,6 +21,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 設定を保存
   document.getElementById('changeSettings').addEventListener('click', () => {
+    if(regularWorkingTimeInput.value != null && regularWorkingTimeInput.value !== ''){
+      const match = regularWorkingTimeInput.value.trim().match(/^([-+]?)(\d+)\.(\d\d)$/);
+      if (!match) {
+        alert('労働時間は「8.00」や「8.30」のような形式で入力してください。');
+        return;
+      }
+    }
     chrome.storage.sync.set({ regularWorkTime: regularWorkingTimeInput.value });
     chrome.storage.sync.set({ WorkTimeTitle: workingTimeTitleInput.value });
   });
