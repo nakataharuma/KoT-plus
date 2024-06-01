@@ -167,7 +167,7 @@ function getWorkTime(regularWorkTimePerDay = new Time(0)){
 
 // ======================================== 要素を取得する関数 ========================================
 
-// 一ヶ月の基本労働時間を取得
+// 基本基準時間を取得
 function getRegularWorkTime(){
   const regularWorkTimeElement = document.querySelector('.specific-table_800 tbody td.custom1');
   if (regularWorkTimeElement) {
@@ -183,7 +183,7 @@ function getRegularWorkTime(){
   }
 }
 
-// 労働日数を取得
+// 労働日数を取得(平日から取得)
 function getWorkCount(){
   const workCountElement = document.querySelector('.specific-daysCount_1 li > div.work_count');
   if (workCountElement) {
