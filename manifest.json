@@ -4,8 +4,6 @@
   "version": "1.0",
   "description": "KOTのページに情報を追加する拡張機能です。",
   "permissions": [
-    "scripting",
-    "tabs",
     "storage"
   ],
   "content_scripts": [
