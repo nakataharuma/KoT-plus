@@ -130,6 +130,9 @@ main().catch(error => console.error('Error in main function:', error));
 async function getRegularWorkTimePerDay() {
   try {
     const value = await chrome.storage.sync.get(['regularWorkTime']);
+    if (value.regularWorkTime === '' || value.regularWorkTime == null) {
+      return Time.fromString('8.00');
+    }
     return Time.fromString(value.regularWorkTime);
   } catch (error) {
     return Time.fromString('8.00');
@@ -207,7 +210,7 @@ async function getWorkTime(){
   try{
     value = await chrome.storage.sync.get(['WorkTimeTitle']);
     workTimeTitle = value.WorkTimeTitle;
-    if(workTimeTitle === ''){
+    if(workTimeTitle === '' || workTimeTitle == null){
       workTimeTitle = '労働合計';
     }
   } catch (error) {
