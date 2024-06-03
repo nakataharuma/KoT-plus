@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "KoT_plus",
-  "version": "1.0",
+  "version": "1.01",
   "description": "KOTのページに月の合計残業時間の情報を追加する拡張機能です。",
   "permissions": [
     "storage"
