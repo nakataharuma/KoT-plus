@@ -153,7 +153,7 @@ async function getOverWorkTime(regularWorkTimePerDay = new Time(0)){
 
 // ======================================== 要素を取得する関数 ========================================
 
-// 基本基準時間を取得
+// NOTE 基本基準時間を取得（現在は未使用）
 function getRegularWorkTime(){
   const regularWorkTimeElement = document.querySelector('.specific-table_800 tbody td.custom1');
   if (regularWorkTimeElement) {
