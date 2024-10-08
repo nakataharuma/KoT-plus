@@ -272,35 +272,29 @@ async function getWorkTime(){
   // 労働時間を取得
   const arrayOfWorkTime = []; // 労働時間の配列
 
-  // // 労働時間ヘッダーのクラス名から労働時間の値の配列を取得している
-  // const workTimeElements = document.querySelectorAll(`.htBlock-adjastableTableF tbody td.${workTimeClass} > p`);
-  // if(workTimeElements.length > 0){
-  //   workTimeElements.forEach((workTimeElement) => {
-  //     const workTimeText = workTimeElement.textContent;
-
-  //     // 労働時間の値が書き込まれていなかったら（明日に勤怠打刻はない）、労働時間をリストに挿入するのやめる
-  //     try{
-  //       let workTimeTextString = Time.fromString(workTimeText);
-  //       // console.log(`workTimeTextString: ${workTimeTextString}`);
-  //       arrayOfWorkTime.push(workTimeTextString);
-  //     } catch (e) {
-  //       return;
-  //     }
-  //   });
-  // }
-
   // TEST: 無視する日付
-  const testIgnoreDate = '10/03（木）';
+  const testIgnoreDateArray = [
+    '10/02（水）',
+    '10/03（木）',
+    '10/04（金）',
+  ];
 
   // 日付レコードそれぞれに対して、日付と労働合計（1日分）を取得し、合計する
   TableRecordByDateArray.forEach((TableRecordByDate) => {
+
     const dateTd = TableRecordByDate.getDateTd();
     const dateText = dateTd.querySelector('p').textContent.trim();  // 改行と空白を取り除く
 
-    console.log(`testIgnoreDate: ${testIgnoreDate}, dateText: ${dateText}`);
     // 除外指定された日付は無視する
-    if (dateText === testIgnoreDate) {
-      console.log("ignore!");
+    ignoreCalculate = false;
+
+    testIgnoreDateArray.forEach((testIgnoreDate) => {
+      if (dateText === testIgnoreDate) {
+        ignoreCalculate = true;
+        return;
+      }
+    })
+    if (ignoreCalculate === true) {
       return;
     }
 
@@ -311,7 +305,7 @@ async function getWorkTime(){
     try {
       const workTimeText = Time.fromString(workTimeRawText);
       arrayOfWorkTime.push(workTimeText);
-      console.log(`dateText: ${dateText}, workTimeText: ${workTimeText}`);
+      // console.log(`dateText: ${dateText}, workTimeText: ${workTimeText}`);
     } catch (e) {
       return;
     }
