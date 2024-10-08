@@ -1,3 +1,8 @@
+// シェルから関数やクラスを検証する
+// ```
+// $ node
+// > .load content.js  エラーが発生するが、Timeなどはロードできている
+// ```
 // ======================================== クラス ========================================
 
 // 時間を扱うクラス
@@ -203,11 +208,28 @@ function getPaidHolidayCount(){
   }
 }
 
+
+class TableRecordByDate {
+  constructor(trElement) {
+    this.trElement = trElement;
+  }
+
+  getDateTd() {
+    return this.trElement.querySelector("td.htBlock-scrollTable_day");
+  }
+
+  getTdFromClassName(className) {
+    console.log(`TEST: td.${className}`);
+    return this.trElement.querySelector(`td.${className}`);
+  }
+}
+
 // 働いた日の労働時間を取得
 async function getWorkTime(){
   // 設定値を取得
   let workTimeTitle = '労働合計';
   try{
+    // MEMO: 労働合計のラベルを取得する？
     value = await chrome.storage.sync.get(['WorkTimeTitle']);
     workTimeTitle = value.WorkTimeTitle;
     if(workTimeTitle === '' || workTimeTitle == null){
@@ -218,10 +240,12 @@ async function getWorkTime(){
   }
 
   // タイトルが一致するclass名を取得
+  // MEMO: テーブルヘッダーの中で、労働時間というラベルを探している
   const possibleHeaderElements = Array.from(document.querySelectorAll('.htBlock-adjastableTableF thead th'));
   const workTimeHeaderElement = possibleHeaderElements.find((possibleHeader) => {
     const lebel = possibleHeader.querySelector('p').textContent;
     // <br />タグを削除する
+    // MEMO: `労働<br />合計`となっているから
     const lebelWithoutBr = lebel.replace(/\s*<br\s*\/?>\s*/gi, '').trim();
     if(lebelWithoutBr === workTimeTitle) return true;
   });
@@ -229,25 +253,60 @@ async function getWorkTime(){
     console.log(`列が見つかりませんでした。タイトル:${workTimeTitle}`);
     return null;
   }
-  const workTimeClass = workTimeHeaderElement.className.split(' ')[0];
+
+  // 列が見つかった状態
+  const workTimeClass = workTimeHeaderElement.className.split(' ')[0];  // custom5
   if(!workTimeClass){
     console.log('労働時間の列が見つかりませんでした。');
     return null;
   }
 
+  // MEMO: 日付ヘッダーを見つける
+  // const dateHeader = document.querySelector('.htBlock-adjastableTableF thead th.specific_date p');
+
+  const TableRecordByDateArray = Array.from(
+    document.querySelectorAll('.htBlock-adjastableTableF tbody tr'),
+    td => new TableRecordByDate(td)
+  );
+
   // 労働時間を取得
   const arrayOfWorkTime = []; // 労働時間の配列
-  const workTimeElements = document.querySelectorAll(`.htBlock-adjastableTableF tbody td.${workTimeClass} > p`);
-  if(workTimeElements.length > 0){
-    workTimeElements.forEach((workTimeElement) => {
-      const workTimeText = workTimeElement.textContent;
-      try{
-        arrayOfWorkTime.push(Time.fromString(workTimeText));
-      } catch (e) {
-        return;
-      }
-    });
-  }
+
+  // // 労働時間ヘッダーのクラス名から労働時間の値の配列を取得している
+  // const workTimeElements = document.querySelectorAll(`.htBlock-adjastableTableF tbody td.${workTimeClass} > p`);
+  // if(workTimeElements.length > 0){
+  //   workTimeElements.forEach((workTimeElement) => {
+  //     const workTimeText = workTimeElement.textContent;
+
+  //     // 労働時間の値が書き込まれていなかったら（明日に勤怠打刻はない）、労働時間をリストに挿入するのやめる
+  //     try{
+  //       let workTimeTextString = Time.fromString(workTimeText);
+  //       // console.log(`workTimeTextString: ${workTimeTextString}`);
+  //       arrayOfWorkTime.push(workTimeTextString);
+  //     } catch (e) {
+  //       return;
+  //     }
+  //   });
+  // }
+
+  // すべての日付を書き出す処理
+  TableRecordByDateArray.forEach((TableRecordByDate) => {
+    const dateTd = TableRecordByDate.getDateTd();
+    const dateText = dateTd.querySelector('p').textContent;
+
+    const workTimeTd = TableRecordByDate.getTdFromClassName(workTimeClass);
+    const workTimeRawText = workTimeTd.querySelector('p').textContent;
+
+    // Timeへの変換が失敗した場合、労働合計の値が入っていないとみなす
+    try {
+      const workTimeText = Time.fromString(workTimeRawText);
+      arrayOfWorkTime.push(workTimeText);
+    } catch (e) {
+      return;
+    }
+
+    // console.log(`dateText: ${dateText}, workTimeText: ${workTimeText}`);
+  })
 
   return arrayOfWorkTime;
 }
