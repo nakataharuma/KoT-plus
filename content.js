@@ -273,11 +273,13 @@ async function getWorkTime(){
   const arrayOfWorkTime = []; // 労働時間の配列
 
   // TEST: 無視する日付
-  const testIgnoreDateArray = [
-    '10/02（水）',
-    '10/03（木）',
-    '10/04（金）',
-  ];
+  // const testIgnoreDateArray = [
+  //   '10/02（水）',
+  //   '10/03（木）',
+  //   '10/04（金）',
+  // ];
+  const ignoreDateTextArray = await chrome.storage.sync.get(['ignoreWorkingTimeDates']);
+  console.log(`ignoreDateArray: ${ignoreDateTextArray}`)
 
   // 日付レコードそれぞれに対して、日付と労働合計（1日分）を取得し、合計する
   TableRecordByDateArray.forEach((TableRecordByDate) => {
@@ -288,8 +290,8 @@ async function getWorkTime(){
     // 除外指定された日付は無視する
     ignoreCalculate = false;
 
-    testIgnoreDateArray.forEach((testIgnoreDate) => {
-      if (dateText === testIgnoreDate) {
+    ignoreDateTextArray.forEach((ignoreDateText) => {
+      if (dateText === ignoreDateText) {
         ignoreCalculate = true;
         return;
       }
