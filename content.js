@@ -219,7 +219,6 @@ class TableRecordByDate {
   }
 
   getTdFromClassName(className) {
-    console.log(`TEST: td.${className}`);
     return this.trElement.querySelector(`td.${className}`);
   }
 }
@@ -264,6 +263,7 @@ async function getWorkTime(){
   // MEMO: 日付ヘッダーを見つける
   // const dateHeader = document.querySelector('.htBlock-adjastableTableF thead th.specific_date p');
 
+  // すべての日付レコードをTableRecordByDateへ変換する
   const TableRecordByDateArray = Array.from(
     document.querySelectorAll('.htBlock-adjastableTableF tbody tr'),
     td => new TableRecordByDate(td)
@@ -289,10 +289,20 @@ async function getWorkTime(){
   //   });
   // }
 
-  // すべての日付を書き出す処理
+  // TEST: 無視する日付
+  const testIgnoreDate = '10/03（木）';
+
+  // 日付レコードそれぞれに対して、日付と労働合計（1日分）を取得し、合計する
   TableRecordByDateArray.forEach((TableRecordByDate) => {
     const dateTd = TableRecordByDate.getDateTd();
-    const dateText = dateTd.querySelector('p').textContent;
+    const dateText = dateTd.querySelector('p').textContent.trim();  // 改行と空白を取り除く
+
+    console.log(`testIgnoreDate: ${testIgnoreDate}, dateText: ${dateText}`);
+    // 除外指定された日付は無視する
+    if (dateText === testIgnoreDate) {
+      console.log("ignore!");
+      return;
+    }
 
     const workTimeTd = TableRecordByDate.getTdFromClassName(workTimeClass);
     const workTimeRawText = workTimeTd.querySelector('p').textContent;
@@ -301,11 +311,10 @@ async function getWorkTime(){
     try {
       const workTimeText = Time.fromString(workTimeRawText);
       arrayOfWorkTime.push(workTimeText);
+      console.log(`dateText: ${dateText}, workTimeText: ${workTimeText}`);
     } catch (e) {
       return;
     }
-
-    // console.log(`dateText: ${dateText}, workTimeText: ${workTimeText}`);
   })
 
   return arrayOfWorkTime;
