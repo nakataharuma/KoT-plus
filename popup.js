@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   const regularWorkingTimeInput = document.getElementById('setWorkingTimePerDay');
   const workingTimeTitleInput = document.getElementById('setWorkingTimeTitle');
-  const ignoreWorkingTimeDatesInput = document.getElementById('setIgnoreWorkingTimeDates');
+  const NotCalDatesForWorkingTimeInput = document.getElementById('setNotCalDatesForWorkingTime');
 
   // 保存された値を取得して入力フィールドに設定
   chrome.storage.sync.get(['regularWorkTime'], function(result) {
@@ -14,9 +14,9 @@ document.addEventListener('DOMContentLoaded', function() {
         workingTimeTitleInput.value = result.WorkTimeTitle;
     }
   });
-  chrome.storage.sync.get(['ignoreWorkingTimeDates'], function(result) {
-    if (result.ignoreWorkingTimeDates) {
-        ignoreWorkingTimeDatesInput.value = result.ignoreWorkingTimeDates;
+  chrome.storage.sync.get(['notCalDatesForWorkingTime'], function(result) {
+    if (result.notCalDatesForWorkingTime) {
+        NotCalDatesForWorkingTimeInput.value = result.notCalDatesForWorkingTime;
     }
   });
 
@@ -36,6 +36,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     chrome.storage.sync.set({ regularWorkTime: regularWorkingTimeInput.value });
     chrome.storage.sync.set({ WorkTimeTitle: workingTimeTitleInput.value });
-    chrome.storage.sync.set({ ignoreWorkingTimeDates: ignoreWorkingTimeDatesInput.value });
+    chrome.storage.sync.set({ notCalDatesForWorkingTime: NotCalDatesForWorkingTimeInput.value });
   });
 });

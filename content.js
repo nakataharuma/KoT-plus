@@ -163,12 +163,26 @@ async function getOverWorkTime(regularWorkTimePerDay = new Time(0)){
   const workTimes = await getWorkTime();
   if(workTimes.length > 0){
     workTimes.forEach((workTime) => {
-      console.log(`実際の労働時間 - 基本労働時間 = 残業貯金`)
-      console.log(`${workTime} - ${regularWorkTimePerDay} = ${workTime.minus(regularWorkTimePerDay)}`)
       amountOfOvertime = amountOfOvertime.plus(workTime.minus(regularWorkTimePerDay));
     });
   }
   return amountOfOvertime;
+}
+
+// 除外する日付を取得
+async function getNotCalDatesForWorkingTime() {
+  const value = await chrome.storage.sync.get(['notCalDatesForWorkingTime']);
+  let notCalDateText;
+
+  // nullだった場合、空文字列を代入する
+  if (value == null) {
+    notCalDateText = ''
+  } else {
+    notCalDateText = value.notCalDatesForWorkingTime;
+  }
+
+  const NotCalForWorkTimeDateTexts = notCalDateText ? notCalDateText.split(',') : [];
+  return NotCalForWorkTimeDateTexts;
 }
 
 // ======================================== 要素を取得する関数 ========================================
@@ -265,19 +279,7 @@ async function getWorkTime(){
   // 労働時間を取得
   const arrayOfWorkTime = []; // 労働時間の配列
 
-  // ポップアップから除外する日付を取得
-  const value = await chrome.storage.sync.get(['ignoreWorkingTimeDates']);
-  let ignoreDateText;
-
-  // nullだった場合、空文字列を代入する
-  if (value == null) {
-    ignoreDateText = ''
-  } else {
-    ignoreDateText = value.ignoreWorkingTimeDates;
-  }
-  console.log(`ignoreDateText: ${ignoreDateText}`);
-
-  const NotCalForWorkTimeDateTexts = ignoreDateText ? ignoreDateText.split(',') : [];
+  const NotCalDateTextsForWorkTime = await getNotCalDatesForWorkingTime();
 
   // 日付レコードそれぞれに対して、日付と労働合計（1日分）を取得し、合計する
   TableRecordByDateArray.forEach((TableRecordByDate) => {
@@ -286,17 +288,17 @@ async function getWorkTime(){
     dateText = dateText.substring(0, dateText.indexOf('（'));  // 曜日を乗り除く  (ex. 10/10（木） -> 10/10)
 
     // 日付により、労働合計の計算から除外するかどうか
-    isIgnoreByDate = false;
+    isNotCal = false;
 
     // 除外日付判定
-    NotCalForWorkTimeDateTexts.forEach((NotCalForWorkTimeDateText) => {
-      if (dateText === NotCalForWorkTimeDateText) {
-        isIgnoreByDate = true;
+    NotCalDateTextsForWorkTime.forEach((NotCalDateTextForWorkTime) => {
+      if (dateText === NotCalDateTextForWorkTime) {
+        isNotCal = true;
         return;
       }
     })
 
-    if (isIgnoreByDate === true) {
+    if (isNotCal === true) {
       return;
     }
 
