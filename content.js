@@ -278,25 +278,37 @@ async function getWorkTime(){
   //   '10/03（木）',
   //   '10/04（金）',
   // ];
-  const ignoreDateTextArray = await chrome.storage.sync.get(['ignoreWorkingTimeDates']);
-  console.log(`ignoreDateArray: ${ignoreDateTextArray}`)
+  const value = await chrome.storage.sync.get(['ignoreWorkingTimeDates']);
+
+  let ignoreDateText;
+
+  // nullだった場合、空文字列を代入する
+  if (value == null) {
+    ignoreDateText = ''
+  } else {
+    ignoreDateText = value.ignoreWorkingTimeDates;
+  }
+
+  const NotCalForWorkTimeDateTexts = ignoreDateText ? ignoreDateText.split(',') : [];
 
   // 日付レコードそれぞれに対して、日付と労働合計（1日分）を取得し、合計する
   TableRecordByDateArray.forEach((TableRecordByDate) => {
 
     const dateTd = TableRecordByDate.getDateTd();
-    const dateText = dateTd.querySelector('p').textContent.trim();  // 改行と空白を取り除く
+    const dateText = dateTd.querySelector('p').textContent.trim();  // 改行と空白が含まれているため、取り除く
 
-    // 除外指定された日付は無視する
-    ignoreCalculate = false;
+    // FIXME: rename
+    isContinueDate = false;
 
-    ignoreDateTextArray.forEach((ignoreDateText) => {
-      if (dateText === ignoreDateText) {
-        ignoreCalculate = true;
+    NotCalForWorkTimeDateTexts.forEach((NotCalForWorkTimeDateText) => {
+      if (dateText === NotCalForWorkTimeDateText) {
+        isContinueDate = true;
         return;
       }
     })
-    if (ignoreCalculate === true) {
+
+    // 除外指定された日付は無視する
+    if (isContinueDate === true) {
       return;
     }
 
