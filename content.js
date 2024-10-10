@@ -1,8 +1,3 @@
-// シェルから関数やクラスを検証する
-// ```
-// $ node
-// > .load content.js  エラーが発生するが、Timeなどはロードできている
-// ```
 // ======================================== クラス ========================================
 
 // 時間を扱うクラス
@@ -86,6 +81,24 @@ class Days{
       integerPart += 1;
     }
     return new Days(`${integerPart}.${decimalPart}`);
+  }
+}
+
+// 日別のテーブルレコードを扱うクラス
+// 日付や労働合計などの値取得を関数に集約する
+class TableRecordByDate {
+  constructor(trElement) {
+    this.trElement = trElement;
+  }
+
+  // 日付のtdを取得
+  getDateTd() {
+    return this.trElement.querySelector("td.htBlock-scrollTable_day");
+  }
+
+  // クラス名からtdを取得
+  getTdFromClassName(className) {
+    return this.trElement.querySelector(`td.${className}`);
   }
 }
 
@@ -210,27 +223,11 @@ function getPaidHolidayCount(){
   }
 }
 
-
-class TableRecordByDate {
-  constructor(trElement) {
-    this.trElement = trElement;
-  }
-
-  getDateTd() {
-    return this.trElement.querySelector("td.htBlock-scrollTable_day");
-  }
-
-  getTdFromClassName(className) {
-    return this.trElement.querySelector(`td.${className}`);
-  }
-}
-
 // 働いた日の労働時間を取得
 async function getWorkTime(){
   // 設定値を取得
   let workTimeTitle = '労働合計';
   try{
-    // MEMO: 労働合計のラベルを取得する？
     value = await chrome.storage.sync.get(['WorkTimeTitle']);
     workTimeTitle = value.WorkTimeTitle;
     if(workTimeTitle === '' || workTimeTitle == null){
@@ -241,12 +238,10 @@ async function getWorkTime(){
   }
 
   // タイトルが一致するclass名を取得
-  // MEMO: テーブルヘッダーの中で、労働時間というラベルを探している
   const possibleHeaderElements = Array.from(document.querySelectorAll('.htBlock-adjastableTableF thead th'));
   const workTimeHeaderElement = possibleHeaderElements.find((possibleHeader) => {
     const lebel = possibleHeader.querySelector('p').textContent;
     // <br />タグを削除する
-    // MEMO: `労働<br />合計`となっているから
     const lebelWithoutBr = lebel.replace(/\s*<br\s*\/?>\s*/gi, '').trim();
     if(lebelWithoutBr === workTimeTitle) return true;
   });
@@ -255,17 +250,13 @@ async function getWorkTime(){
     return null;
   }
 
-  // 列が見つかった状態
   const workTimeClass = workTimeHeaderElement.className.split(' ')[0];  // custom5
   if(!workTimeClass){
     console.log('労働時間の列が見つかりませんでした。');
     return null;
   }
 
-  // MEMO: 日付ヘッダーを見つける
-  // const dateHeader = document.querySelector('.htBlock-adjastableTableF thead th.specific_date p');
-
-  // すべての日付レコードをTableRecordByDateへ変換する
+  // すべての日付テーブルレコードをTableRecordByDateクラスへ変換する
   const TableRecordByDateArray = Array.from(
     document.querySelectorAll('.htBlock-adjastableTableF tbody tr'),
     td => new TableRecordByDate(td)
@@ -274,14 +265,8 @@ async function getWorkTime(){
   // 労働時間を取得
   const arrayOfWorkTime = []; // 労働時間の配列
 
-  // TEST: 無視する日付
-  // const testIgnoreDateArray = [
-  //   '10/02（水）',
-  //   '10/03（木）',
-  //   '10/04（金）',
-  // ];
+  // ポップアップから除外する日付を取得
   const value = await chrome.storage.sync.get(['ignoreWorkingTimeDates']);
-
   let ignoreDateText;
 
   // nullだった場合、空文字列を代入する
@@ -296,37 +281,32 @@ async function getWorkTime(){
 
   // 日付レコードそれぞれに対して、日付と労働合計（1日分）を取得し、合計する
   TableRecordByDateArray.forEach((TableRecordByDate) => {
-
     const dateTd = TableRecordByDate.getDateTd();
     let dateText = dateTd.querySelector('p').textContent.trim();  // 改行と空白が含まれているため、取り除く
     dateText = dateText.substring(0, dateText.indexOf('（'));  // 曜日を乗り除く  (ex. 10/10（木） -> 10/10)
 
-    // FIXME: rename
-    isContinueDate = false;
+    // 日付により、労働合計の計算から除外するかどうか
+    isIgnoreByDate = false;
 
+    // 除外日付判定
     NotCalForWorkTimeDateTexts.forEach((NotCalForWorkTimeDateText) => {
-      console.log(`dateText: ${dateText}, NotCalForWorkTimeDateText: ${NotCalForWorkTimeDateText}`);
       if (dateText === NotCalForWorkTimeDateText) {
-        isContinueDate = true;
-        console.log("isContinue!");
+        isIgnoreByDate = true;
         return;
       }
     })
 
-    // 除外指定された日付は無視する
-    if (isContinueDate === true) {
-      console.log(`ignore: ${dateText}`);
+    if (isIgnoreByDate === true) {
       return;
     }
 
     const workTimeTd = TableRecordByDate.getTdFromClassName(workTimeClass);
     const workTimeRawText = workTimeTd.querySelector('p').textContent;
 
-    // Timeへの変換が失敗した場合、労働合計の値が入っていないとみなす
+    // 労働時間の値が書き込まれていなかったら、今日の日付を超えたとみなす
     try {
       const workTimeText = Time.fromString(workTimeRawText);
       arrayOfWorkTime.push(workTimeText);
-      // console.log(`dateText: ${dateText}, workTimeText: ${workTimeText}`);
     } catch (e) {
       return;
     }
