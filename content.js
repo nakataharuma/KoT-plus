@@ -150,6 +150,8 @@ async function getOverWorkTime(regularWorkTimePerDay = new Time(0)){
   const workTimes = await getWorkTime();
   if(workTimes.length > 0){
     workTimes.forEach((workTime) => {
+      console.log(`実際の労働時間 - 基本労働時間 = 残業貯金`)
+      console.log(`${workTime} - ${regularWorkTimePerDay} = ${workTime.minus(regularWorkTimePerDay)}`)
       amountOfOvertime = amountOfOvertime.plus(workTime.minus(regularWorkTimePerDay));
     });
   }
@@ -288,6 +290,7 @@ async function getWorkTime(){
   } else {
     ignoreDateText = value.ignoreWorkingTimeDates;
   }
+  console.log(`ignoreDateText: ${ignoreDateText}`);
 
   const NotCalForWorkTimeDateTexts = ignoreDateText ? ignoreDateText.split(',') : [];
 
@@ -295,20 +298,24 @@ async function getWorkTime(){
   TableRecordByDateArray.forEach((TableRecordByDate) => {
 
     const dateTd = TableRecordByDate.getDateTd();
-    const dateText = dateTd.querySelector('p').textContent.trim();  // 改行と空白が含まれているため、取り除く
+    let dateText = dateTd.querySelector('p').textContent.trim();  // 改行と空白が含まれているため、取り除く
+    dateText = dateText.substring(0, dateText.indexOf('（'));  // 曜日を乗り除く  (ex. 10/10（木） -> 10/10)
 
     // FIXME: rename
     isContinueDate = false;
 
     NotCalForWorkTimeDateTexts.forEach((NotCalForWorkTimeDateText) => {
+      console.log(`dateText: ${dateText}, NotCalForWorkTimeDateText: ${NotCalForWorkTimeDateText}`);
       if (dateText === NotCalForWorkTimeDateText) {
         isContinueDate = true;
+        console.log("isContinue!");
         return;
       }
     })
 
     // 除外指定された日付は無視する
     if (isContinueDate === true) {
+      console.log(`ignore: ${dateText}`);
       return;
     }
 
